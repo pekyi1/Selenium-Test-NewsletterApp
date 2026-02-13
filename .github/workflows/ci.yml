@@ -35,7 +35,8 @@ jobs:
         with:
           payload: |
             {
-              "text": "Selenium UI Tests: *${{ job.status }}* | Repo: `${{ github.repository }}` | Branch: `${{ github.ref_name }}` | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              "text": "Selenium UI Tests: *${{ job.status == 'success' && 'PASS ✅' || 'FAIL ❌' }}* | Repo: `${{ github.repository }}` | Branch: `${{ github.ref_name }}` | Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
