@@ -8,11 +8,11 @@ public class NewsletterSignupTest extends BaseTest {
 
     @Test
     void newsletterSignupShowsSuccessMessage() {
-        String baseUrl = System.getProperty("baseUrl", "https://newsletter-sign-up-form-rust-eight.vercel.app/");
+        String baseUrl = System.getProperty("baseUrl", "https://newsletter-sign-up-form-rust-eigh.vercel.app/");
 
         NewsletterPage page = new NewsletterPage(driver)
                 .open(baseUrl)
-                .enterEmail("pekyi.fred@example.com")
+                .enterEmail("fred.pekyi@amalitech.com")
                 .submit();
 
         String msg = page.successMessageText();
