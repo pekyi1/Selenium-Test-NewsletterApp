@@ -8,7 +8,7 @@ public class NewsletterSignupTest extends BaseTest {
 
     @Test
     void newsletterSignupShowsSuccessMessage() {
-        String baseUrl = System.getProperty("baseUrl", "https://newsletter-sign-up-form-rust-eigh.vercel.app/");
+        String baseUrl = System.getProperty("baseUrl", "https://newsletter-sign-up-form-rust-eight.vercel.app/");
 
         NewsletterPage page = new NewsletterPage(driver)
                 .open(baseUrl)
