@@ -40,8 +40,17 @@ public class NewsletterPage {
 
     public NewsletterPage open(String url) {
         driver.get(url);
+
+        // Make sure the newsletter form actually loaded
+        if (!driver.getPageSource().contains("newsletter-form")) {
+            throw new AssertionError(
+                    "Newsletter form not found. CI may be loading the wrong page. Check APP_BASE_URL."
+            );
+        }
+
         return this;
     }
+
 
     public NewsletterPage setEmail(String email) {
         wait.until(ExpectedConditions.visibilityOf(emailInput)).clear();
