@@ -89,12 +89,12 @@ jobs:
 
           print("==================================")
 
-          # IMPORTANT: Make this STEP show ❌ in GitHub Actions when tests failed
+          # Make this STEP show ❌ when tests failed
           if failed > 0 or errors > 0:
             sys.exit(1)
           PY
 
-      # Build Slack message:
+      # Build Slack payload:
       # - totals (total, passed, failed, errors, skipped)
       # - ONLY failed/error tests listed with plain reasons
       - name: Build Slack payload (only failed tests + totals)
@@ -108,12 +108,15 @@ jobs:
           total = failed = errors = skipped = 0
           failed_items = []  # (name, kind, reason)
 
-          # If there are no reports, treat as "tests did not run"
+          repo = os.environ.get("GITHUB_REPOSITORY", "")
+          branch = os.environ.get("GITHUB_REF_NAME", "")
+          run_url = f"{os.environ.get('GITHUB_SERVER_URL')}/{repo}/actions/runs/{os.environ.get('GITHUB_RUN_ID')}"
+
           if not files:
-            run_url = f"{os.environ.get('GITHUB_SERVER_URL')}/{os.environ.get('GITHUB_REPOSITORY')}/actions/runs/{os.environ.get('GITHUB_RUN_ID')}"
             text = (
               "*Selenium UI Tests: FAIL ❌*\n"
               "I could not find test reports. This usually means tests did not run or the build stopped early.\n\n"
+              f"Repo: `{repo}` | Branch: `{branch}`\n"
               f"Run details: {run_url}"
             )
             with open("slack_payload.json", "w", encoding="utf-8") as f:
@@ -145,10 +148,6 @@ jobs:
           passed = total - failed - errors - skipped
           status = "PASS ✅" if (failed == 0 and errors == 0) else "FAIL ❌"
 
-          run_url = f"{os.environ.get('GITHUB_SERVER_URL')}/{os.environ.get('GITHUB_REPOSITORY')}/actions/runs/{os.environ.get('GITHUB_RUN_ID')}"
-          repo = os.environ.get("GITHUB_REPOSITORY", "")
-          branch = os.environ.get("GITHUB_REF_NAME", "")
-
           lines = []
           lines.append(f"*Selenium UI Tests: {status}*")
           lines.append(f"Total: *{total}* | Passed: *{passed}* | Failed: *{failed}* | Errors: *{errors}* | Skipped: *{skipped}*")
@@ -156,7 +155,6 @@ jobs:
 
           if failed_items:
             lines.append("*Failed test(s) and why:*")
-            # cap to keep Slack readable
             MAX_SHOW = 12
             for (name, kind, reason) in failed_items[:MAX_SHOW]:
               lines.append(f"• *{name}* — {reason}")
@@ -171,6 +169,19 @@ jobs:
 
           with open("slack_payload.json", "w", encoding="utf-8") as f:
             json.dump({"text": "\n".join(lines)}, f)
+
+          # Also write a plain text version to reuse for email
+          with open("email_body.txt", "w", encoding="utf-8") as f:
+            f.write("\n".join([
+              f"Selenium UI Tests: {status}",
+              f"Total: {total} | Passed: {passed} | Failed: {failed} | Errors: {errors} | Skipped: {skipped}",
+              "",
+              "Failed test(s) and why:" if failed_items else "Failed test(s) and why: None",
+              *([f"- {name}: {reason}" for (name, _, reason) in failed_items[:12]] if failed_items else []),
+              "",
+              f"Repo: {repo} | Branch: {branch}",
+              f"Run details: {run_url}"
+            ]))
           PY
 
       - name: Notify Slack (only failed tests + totals)
@@ -180,6 +191,21 @@ jobs:
           payload-file-path: slack_payload.json
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      # Send Email (same content as Slack, plain-English)
+      - name: Send Email report (only failed tests + totals)
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: Selenium UI Tests - ${{ job.status == 'success' && 'PASS ✅' || 'FAIL ❌' }} - ${{ github.repository }} - ${{ github.ref_name }}
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.SMTP_USERNAME }}
+          secure: false
+          body: file://email_body.txt
 
       # Technical reports for evidence (prints only when failing)
       - name: Print Surefire reports (on failure)
@@ -204,7 +230,6 @@ jobs:
           name: surefire-reports
           path: target/surefire-reports/**
 
-      # Upload Selenium failure evidence (only exists if your tests write to target/test-evidence)
       - name: Upload UI failure evidence
         if: always()
         uses: actions/upload-artifact@v4
