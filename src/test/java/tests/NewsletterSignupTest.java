@@ -9,8 +9,9 @@ public class NewsletterSignupTest extends BaseTest {
 
     @BeforeEach
     void getUrl() {
-        url = System.getProperty("baseUrl");
-        Assertions.assertNotNull(url, "Set -DbaseUrl=<hosted url> in IntelliJ/CI.");
+        url = System.getProperty("baseUrl",
+                System.getenv().getOrDefault("APP_BASE_URL", "https://newsletter-sign-up-form-rust-eight.vercel.app/index.html"));
+        Assertions.assertNotNull(url);
     }
 
     @Test
@@ -82,7 +83,7 @@ public class NewsletterSignupTest extends BaseTest {
     void dismissResetsToSignup_andClearsErrorState() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("fred.pekyi@example") //intentionally failed to test logs
+                .setEmail("fred.pekyi@example.com") //intentionally failed to test logs
                 .submit();
 
         Assertions.assertTrue(page.isSuccessCardShown(), "Success should be visible before dismiss.");

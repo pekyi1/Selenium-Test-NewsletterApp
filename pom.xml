@@ -51,7 +51,7 @@
                     <useModulePath>false</useModulePath>
                     <systemPropertyVariables>
                         <headless>false</headless>
-                        <baseUrl>http://localhost:5500</baseUrl>
+                        <baseUrl>https://newsletter-sign-up-form-rust-eight.vercel.app/index.html</baseUrl>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
