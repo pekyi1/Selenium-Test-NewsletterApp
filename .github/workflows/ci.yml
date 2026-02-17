@@ -176,3 +176,46 @@ jobs:
           payload-file-path: slack_payload.json
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      # Technical reports for evidence (prints only when failing)
+      - name: Print Surefire reports (on failure)
+        if: failure()
+        run: |
+          echo "=== Surefire Reports Directory ==="
+          ls -la target/surefire-reports || true
+
+          echo "=== Dumping Surefire .txt reports (test failures/errors) ==="
+          for f in target/surefire-reports/*.txt; do
+            if [ -f "$f" ]; then
+              echo "----- $f -----"
+              cat "$f"
+              echo
+            fi
+          done
+
+      - name: Upload Surefire test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/**
+
+      # Upload Selenium failure evidence (only exists if your tests write to target/test-evidence)
+      - name: Upload UI failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-evidence
+          path: target/test-evidence/**
+
+      - name: Notify Slack (non-technical summary)
+        if: always()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "${{ steps.slack_summary.outputs.message }}\n\nRepo: `${{ github.repository }}` | Branch: `${{ github.ref_name }}`\nRun details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
