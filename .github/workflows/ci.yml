@@ -26,6 +26,74 @@ jobs:
       - name: Run Selenium tests (headless)
         run: mvn -B -e test -Dheadless=true -DbaseUrl=${{ secrets.APP_BASE_URL }} -DtrimStackTrace=false
 
+      # ✅ NEW: Non-technical summary in the Actions log
+      - name: Human-friendly test summary (readable)
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET, os
+
+          files = sorted(glob.glob("target/surefire-reports/TEST-*.xml"))
+          if not files:
+              print("No Surefire XML reports found (target/surefire-reports/TEST-*.xml).")
+              raise SystemExit(0)
+
+          total_tests = total_failures = total_errors = total_skipped = 0
+          failed_details = []
+
+          for f in files:
+              root = ET.parse(f).getroot()
+              suite_name = root.attrib.get("name", os.path.basename(f))
+              tests = int(root.attrib.get("tests", 0))
+              failures = int(root.attrib.get("failures", 0))
+              errors = int(root.attrib.get("errors", 0))
+              skipped = int(root.attrib.get("skipped", 0))
+
+              total_tests += tests
+              total_failures += failures
+              total_errors += errors
+              total_skipped += skipped
+
+              for tc in root.findall("testcase"):
+                  tname = tc.attrib.get("name", "(unnamed test)")
+                  cname = tc.attrib.get("classname", suite_name)
+
+                  failure = tc.find("failure")
+                  error = tc.find("error")
+
+                  if failure is not None:
+                      msg = (failure.attrib.get("message") or "Assertion failed").strip()
+                      failed_details.append(("FAIL", cname, tname, msg))
+                  elif error is not None:
+                      msg = (error.attrib.get("message") or "Test error").strip()
+                      failed_details.append(("ERROR", cname, tname, msg))
+
+          passed = total_tests - total_failures - total_errors - total_skipped
+
+          print("\n==============================")
+          print("SELENIUM UI TEST SUMMARY")
+          print("==============================")
+          print(f"Total tests : {total_tests}")
+          print(f"Passed      : {passed}")
+          print(f"Failed      : {total_failures}")
+          print(f"Errors      : {total_errors}")
+          print(f"Skipped     : {total_skipped}")
+
+          if failed_details:
+              print("\nFAILED / ERRORED TESTS (What failed and why)")
+              print("--------------------------------------------")
+              for status, cls, name, msg in failed_details:
+                  short_msg = msg.replace("\\n", " ").strip()
+                  print(f"- [{status}] {name}")
+                  print(f"  Test class: {cls}")
+                  print(f"  Reason    : {short_msg}")
+          else:
+              print("\nAll tests passed ✅")
+
+          print("==============================\n")
+          PY
+
+      # Keep the raw logs too (technical evidence)
       - name: Print Surefire reports (on failure)
         if: failure()
         run: |
@@ -37,15 +105,6 @@ jobs:
             if [ -f "$f" ]; then
               echo "----- $f -----"
               cat "$f"
-              echo
-            fi
-          done
-
-          echo "=== Dumping Surefire .xml reports (summary) ==="
-          for f in target/surefire-reports/*.xml; do
-            if [ -f "$f" ]; then
-              echo "----- $f -----"
-              head -n 80 "$f"
               echo
             fi
           done
