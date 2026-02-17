@@ -31,65 +31,65 @@ jobs:
         if: always()
         run: |
           python3 - <<'PY'
-          import glob, xml.etree.ElementTree as ET, os
+          import glob, xml.etree.ElementTree as ET, sys
 
-          files = sorted(glob.glob("target/surefire-reports/TEST-*.xml"))
+          files = glob.glob("target/surefire-reports/TEST-*.xml")
+          total = failed = errors = skipped = 0
+          failed_tests = []
+
           if not files:
-              print("No Surefire XML reports found (target/surefire-reports/TEST-*.xml).")
-              raise SystemExit(0)
-
-          total_tests = total_failures = total_errors = total_skipped = 0
-          failed_details = []
+            print("❌ No Surefire XML reports found in target/surefire-reports.")
+            print("This usually means tests did not run, or Maven failed before producing reports.")
+            sys.exit(1)
 
           for f in files:
-              root = ET.parse(f).getroot()
-              suite_name = root.attrib.get("name", os.path.basename(f))
-              tests = int(root.attrib.get("tests", 0))
-              failures = int(root.attrib.get("failures", 0))
-              errors = int(root.attrib.get("errors", 0))
-              skipped = int(root.attrib.get("skipped", 0))
+            root = ET.parse(f).getroot()
+            total += int(root.attrib.get("tests", 0))
+            failed += int(root.attrib.get("failures", 0))
+            errors += int(root.attrib.get("errors", 0))
+            skipped += int(root.attrib.get("skipped", 0))
 
-              total_tests += tests
-              total_failures += failures
-              total_errors += errors
-              total_skipped += skipped
+            for tc in root.findall("testcase"):
+              name = tc.attrib.get("name", "unknown")
+              failure = tc.find("failure")
+              error = tc.find("error")
 
-              for tc in root.findall("testcase"):
-                  tname = tc.attrib.get("name", "(unnamed test)")
-                  cname = tc.attrib.get("classname", suite_name)
+              if failure is not None:
+                msg = (failure.attrib.get("message") or "").strip()
+                failed_tests.append((name, "FAIL", msg))
+              if error is not None:
+                msg = (error.attrib.get("message") or "").strip()
+                failed_tests.append((name, "ERROR", msg))
 
-                  failure = tc.find("failure")
-                  error = tc.find("error")
+          passed = total - failed - errors - skipped
+          status_icon = "✅" if (failed == 0 and errors == 0) else "❌"
 
-                  if failure is not None:
-                      msg = (failure.attrib.get("message") or "A check did not match the expected result.").strip()
-                      failed_details.append(("FAIL", cname, tname, msg))
-                  elif error is not None:
-                      msg = (error.attrib.get("message") or "The test could not complete.").strip()
-                      failed_details.append(("ERROR", cname, tname, msg))
-
-          passed = total_tests - total_failures - total_errors - total_skipped
-
-          print("\n==============================")
-          print("SELENIUM UI TEST SUMMARY (Readable)")
-          print("==============================")
-          print(f"Total tests : {total_tests}")
+          print("==================================")
+          print(f"SELENIUM UI TEST SUMMARY (Readable) {status_icon}")
+          print("==================================")
+          print(f"Total tests : {total}")
           print(f"Passed      : {passed}")
-          print(f"Failed      : {total_failures}")
-          print(f"Errors      : {total_errors}")
-          print(f"Skipped     : {total_skipped}")
+          print(f"Failed      : {failed}")
+          print(f"Errors      : {errors}")
+          print(f"Skipped     : {skipped}")
+          print("")
+          print("What failed and why")
+          print("-------------------")
 
-          if failed_details:
-              print("\nWhat failed and why")
-              print("-------------------")
-              for status, cls, name, msg in failed_details:
-                  clean = " ".join(msg.replace("\\n", " ").split())
-                  print(f"- {name} ({status})")
-                  print(f"  Reason: {clean}")
+          if not failed_tests:
+            print("- None (all tests passed ✅)")
           else:
-              print("\nAll tests passed ✅")
+            for (name, kind, msg) in failed_tests:
+              icon = "❌" if kind == "FAIL" else "⚠️"
+              short = msg.splitlines()[0] if msg else "No message provided"
+              print(f"- {name} ({icon} {kind})")
+              print(f"  Reason: {short}")
 
-          print("==============================\n")
+          print("==================================")
+
+          # IMPORTANT: Make this STEP show ❌ in GitHub Actions when tests failed
+          if failed > 0 or errors > 0:
+            sys.exit(1)
           PY
 
       # Build Slack-friendly summary (non-technical)
