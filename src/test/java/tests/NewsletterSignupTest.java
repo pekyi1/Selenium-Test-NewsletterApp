@@ -82,7 +82,7 @@ public class NewsletterSignupTest extends BaseTest {
     void dismissResetsToSignup_andClearsErrorState() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("fred.pekyi@example.com")
+                .setEmail("fred.pekyi@example") //intentionally failed to test logs
                 .submit();
 
         Assertions.assertTrue(page.isSuccessCardShown(), "Success should be visible before dismiss.");
