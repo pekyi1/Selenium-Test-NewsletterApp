@@ -19,8 +19,36 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Run Selenium tests (headless) against hosted app
-        run: mvn -B -e test -Dheadless=true -DbaseUrl=${{ secrets.APP_BASE_URL }}
+      - name: Print target URL
+        run: |
+          echo "Testing URL: ${{ secrets.APP_BASE_URL }}"
+
+      - name: Run Selenium tests (headless)
+        run: mvn -B -e test -Dheadless=true -DbaseUrl=${{ secrets.APP_BASE_URL }} -DtrimStackTrace=false
+
+      - name: Print Surefire reports (on failure)
+        if: failure()
+        run: |
+          echo "=== Surefire Reports Directory ==="
+          ls -la target/surefire-reports || true
+
+          echo "=== Dumping Surefire .txt reports (test failures/errors) ==="
+          for f in target/surefire-reports/*.txt; do
+            if [ -f "$f" ]; then
+              echo "----- $f -----"
+              cat "$f"
+              echo
+            fi
+          done
+
+          echo "=== Dumping Surefire .xml reports (summary) ==="
+          for f in target/surefire-reports/*.xml; do
+            if [ -f "$f" ]; then
+              echo "----- $f -----"
+              head -n 80 "$f"
+              echo
+            fi
+          done
 
       - name: Upload Surefire test reports
         if: always()
@@ -28,6 +56,13 @@ jobs:
         with:
           name: surefire-reports
           path: target/surefire-reports/**
+
+      - name: Upload UI failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-evidence
+          path: target/test-evidence/**
 
       - name: Notify Slack (pass/fail)
         if: always()
@@ -39,4 +74,3 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
