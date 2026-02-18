@@ -29,7 +29,7 @@ jobs:
       # Human-friendly summary in GitHub Actions logs (non-technical)
       # NOTE: This step will show ❌ if there are failures/errors (by exiting 1),
       # but it still prints the readable summary first.
-      - name: Human-friendly test summary (readable)
+      - name: Test summary (Readable logs)
         if: always()
         run: |
           python3 - <<'PY'
