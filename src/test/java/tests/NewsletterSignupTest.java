@@ -26,10 +26,11 @@ public class NewsletterSignupTest extends BaseTest {
                 .enterEmail("  fred.pekyi@example.com  ")
                 .clickSubscribeButton();
 
-        Assertions.assertTrue(page.isSuccessCardShown(), "Success card should be shown for valid email.");
-        Assertions.assertFalse(page.isSignupCardShown(), "Signup card should be hidden after success.");
-        Assertions.assertEquals("fred.pekyi@example.com", page.getShownUserEmail(),
-                "Displayed email should match trimmed input.");
+        Assertions.assertAll("Valid Email Success",
+                () -> Assertions.assertTrue(page.isSuccessCardShown(), "Success card should be shown for valid email."),
+                () -> Assertions.assertFalse(page.isSignupCardShown(), "Signup card should be hidden after success."),
+                () -> Assertions.assertEquals("fred.pekyi@example.com", page.getShownUserEmail(),
+                        "Displayed email should match trimmed input."));
     }
 
     @Tag("regression")
@@ -41,10 +42,12 @@ public class NewsletterSignupTest extends BaseTest {
                 .enterEmail("fred.pekyi@amalitech.com")
                 .clickSubscribeButton();
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for empty email.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
-        Assertions.assertTrue(page.isSignupCardShown(), "Signup card should remain visible on error.");
-        Assertions.assertFalse(page.isSuccessCardShown(), "Success card should remain hidden on error.");
+        Assertions.assertAll("Empty Email Error",
+                () -> Assertions.assertTrue(page.isEmailErrorDisplayed(),
+                        "Error message should display for empty email."),
+                () -> Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class."),
+                () -> Assertions.assertTrue(page.isSignupCardShown(), "Signup card should remain visible on error."),
+                () -> Assertions.assertFalse(page.isSuccessCardShown(), "Success card should remain hidden on error."));
     }
 
     @Tag("regression")
@@ -56,8 +59,10 @@ public class NewsletterSignupTest extends BaseTest {
                 .enterEmail("fred.pekyi.example.com") // missing @
                 .clickSubscribeButton();
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for invalid email.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
+        Assertions.assertAll("Invalid Email Format",
+                () -> Assertions.assertTrue(page.isEmailErrorDisplayed(),
+                        "Error message should display for invalid email."),
+                () -> Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class."));
     }
 
     @Tag("regression")
@@ -69,8 +74,10 @@ public class NewsletterSignupTest extends BaseTest {
                 .enterEmail("fred@company") // no .tld
                 .clickSubscribeButton();
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for missing TLD.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
+        Assertions.assertAll("Email Missing TLD",
+                () -> Assertions.assertTrue(page.isEmailErrorDisplayed(),
+                        "Error message should display for missing TLD."),
+                () -> Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class."));
     }
 
     @Tag("regression")
@@ -82,14 +89,19 @@ public class NewsletterSignupTest extends BaseTest {
                 .enterEmail("bademail")
                 .clickSubscribeButton();
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error should be visible after invalid submit.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Input should be in error state.");
+        Assertions.assertAll("Error Visible Before Typing",
+                () -> Assertions.assertTrue(page.isEmailErrorDisplayed(),
+                        "Error should be visible after invalid submit."),
+                () -> Assertions.assertTrue(page.isEmailInputInErrorState(), "Input should be in error state."));
 
         // Your JS hides error on any input event when error class is present
         page.typeEmail("a");
 
-        Assertions.assertFalse(page.isEmailErrorDisplayed(), "Error should hide when user starts typing.");
-        Assertions.assertFalse(page.isEmailInputInErrorState(), "Error class should be removed on input.");
+        Assertions.assertAll("Error Hidden After Typing",
+                () -> Assertions.assertFalse(page.isEmailErrorDisplayed(),
+                        "Error should hide when user starts typing."),
+                () -> Assertions.assertFalse(page.isEmailInputInErrorState(),
+                        "Error class should be removed on input."));
     }
 
     @Tag("regression")
@@ -104,11 +116,12 @@ public class NewsletterSignupTest extends BaseTest {
         Assertions.assertTrue(page.isSuccessCardShown(), "Success should be visible before dismiss.");
         page.clickDismissButton();
 
-        Assertions.assertTrue(page.isSignupCardShown(), "Signup should be visible after dismiss.");
-        Assertions.assertFalse(page.isSuccessCardShown(), "Success should be hidden after dismiss.");
-
-        // After dismiss, error must be hidden and input not in error state
-        Assertions.assertFalse(page.isEmailErrorDisplayed(), "Error should be hidden after dismiss/reset.");
-        Assertions.assertFalse(page.isEmailInputInErrorState(), "Input should not have error class after dismiss.");
+        Assertions.assertAll("Dismiss State Reset",
+                () -> Assertions.assertTrue(page.isSignupCardShown(), "Signup should be visible after dismiss."),
+                () -> Assertions.assertFalse(page.isSuccessCardShown(), "Success should be hidden after dismiss."),
+                () -> Assertions.assertFalse(page.isEmailErrorDisplayed(),
+                        "Error should be hidden after dismiss/reset."),
+                () -> Assertions.assertFalse(page.isEmailInputInErrorState(),
+                        "Input should not have error class after dismiss."));
     }
 }
