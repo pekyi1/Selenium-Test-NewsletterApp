@@ -38,4 +38,36 @@ public class WaitUtils {
             return false;
         }
     }
+
+    /**
+     * Safe Click with Retry Logic (Handles ElementClickInterceptedException)
+     * Principle: Handle Exceptions
+     */
+    public void safeClick(WebElement element) {
+        int attempts = 0;
+        while (attempts < 3) {
+            try {
+                waitForClickability(element).click();
+                return;
+            } catch (org.openqa.selenium.ElementClickInterceptedException e) {
+                // Wait a bit and retry
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ignored) {
+                }
+                attempts++;
+            }
+        }
+        throw new RuntimeException("Failed to click element after 3 attempts");
+    }
+
+    /**
+     * Wait for dynamic element with specific text
+     * Principle: Handle Dynamic Elements
+     */
+    public WebElement waitForElementWithText(org.openqa.selenium.By locator, String text) {
+        return wait.until(ExpectedConditions.textToBePresentInElementLocated(locator, text))
+                ? driver.findElement(locator)
+                : null;
+    }
 }

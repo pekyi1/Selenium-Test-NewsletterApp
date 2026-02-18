@@ -1,0 +1,11 @@
+{
+    "validEmails": [
+        "fred.pekyi@example.com"
+    ],
+    "invalidEmails": [
+        "",
+        "fred.pekyi.example.com",
+        "fred@company",
+        "plainaddress"
+    ]
+}

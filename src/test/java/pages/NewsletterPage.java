@@ -40,7 +40,7 @@ public class NewsletterPage {
     }
 
     public NewsletterPage open(String url) {
-        driver.get(url);
+        driver.get(url); //opens a new browser with the url
         return this;
     }
 
@@ -51,7 +51,7 @@ public class NewsletterPage {
     }
 
     public NewsletterPage clickSubscribeButton() {
-        waitUtils.waitForClickability(subscribeButton).click();
+        waitUtils.safeClick(subscribeButton);
         return this;
     }
 
@@ -62,7 +62,7 @@ public class NewsletterPage {
     }
 
     public NewsletterPage clickDismissButton() {
-        waitUtils.waitForClickability(dismissButton).click();
+        waitUtils.safeClick(dismissButton);
         return this;
     }
 
