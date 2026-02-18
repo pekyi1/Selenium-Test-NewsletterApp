@@ -3,6 +3,7 @@ package tests;
 import org.junit.jupiter.api.*;
 import pages.NewsletterPage;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class NewsletterSignupTest extends BaseTest {
 
     private String url;
@@ -15,6 +16,9 @@ public class NewsletterSignupTest extends BaseTest {
         Assertions.assertNotNull(url);
     }
 
+    @Tag("smoke")
+    @Tag("regression")
+    @Order(1)
     @Test
     void validEmail_showsSuccessCard_andDisplaysTrimmedEmail() {
         NewsletterPage page = new NewsletterPage(driver)
@@ -28,6 +32,8 @@ public class NewsletterSignupTest extends BaseTest {
                 "Displayed email should match trimmed input.");
     }
 
+    @Tag("regression")
+    @Order(2)
     @Test
     void emptyEmail_showsError_andEmailInputGetsErrorClass() {
         NewsletterPage page = new NewsletterPage(driver)
@@ -41,6 +47,8 @@ public class NewsletterSignupTest extends BaseTest {
         Assertions.assertFalse(page.isSuccessCardShown(), "Success card should remain hidden on error.");
     }
 
+    @Tag("regression")
+    @Order(3)
     @Test
     void invalidEmailFormat_showsError() {
         NewsletterPage page = new NewsletterPage(driver)
@@ -52,6 +60,8 @@ public class NewsletterSignupTest extends BaseTest {
         Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
     }
 
+    @Tag("regression")
+    @Order(4)
     @Test
     void emailWithoutDotDomain_showsError() {
         NewsletterPage page = new NewsletterPage(driver)
@@ -63,6 +73,8 @@ public class NewsletterSignupTest extends BaseTest {
         Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
     }
 
+    @Tag("regression")
+    @Order(5)
     @Test
     void errorClearsWhenUserTypesAfterInvalidSubmit() {
         NewsletterPage page = new NewsletterPage(driver)
@@ -80,6 +92,8 @@ public class NewsletterSignupTest extends BaseTest {
         Assertions.assertFalse(page.isEmailInputInErrorState(), "Error class should be removed on input.");
     }
 
+    @Tag("regression")
+    @Order(6)
     @Test
     void dismissResetsToSignup_andClearsErrorState() {
         NewsletterPage page = new NewsletterPage(driver)
