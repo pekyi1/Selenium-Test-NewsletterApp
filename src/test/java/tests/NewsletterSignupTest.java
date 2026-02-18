@@ -38,7 +38,7 @@ public class NewsletterSignupTest extends BaseTest {
     void emptyEmail_showsError_andEmailInputGetsErrorClass() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .enterEmail("r")
+                .enterEmail("fred.pekyi@amalitech.com")
                 .clickSubscribeButton();
 
         Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for empty email.");
