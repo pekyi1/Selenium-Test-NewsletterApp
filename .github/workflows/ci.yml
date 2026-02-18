@@ -33,7 +33,7 @@ jobs:
         if: always()
         run: |
           python3 - <<'PY'
-          import glob, xml.etree.ElementTree as ET, sys
+          import glob, xml.etree.ElementTree as ET, sys, re
 
           files = glob.glob("target/surefire-reports/TEST-*.xml")
           total = failed = errors = skipped = 0
@@ -83,12 +83,16 @@ jobs:
           else:
             for (name, kind, msg) in failed_tests:
               icon = "❌" if kind == "FAIL" else "⚠️"
-              # Capture up to 6 lines for better context on Soft Assertions
-              lines = msg.splitlines()
+              
+              # Clean up message for "reasons"
+              clean_msg = msg.replace("failures)", "reasons)")
+              # Strip exception class names for cleaner output
+              clean_msg = re.sub(r'org\.opentest4j\.AssertionFailedError: ', '', clean_msg)
+              
+              lines = clean_msg.splitlines()
               short = "\n".join(lines[:6])
               if len(lines) > 6: short += "\n  ..."
               
-              # Indent the reason nicely
               formatted_reason = short.replace("\n", "\n  ")
               print(f"- {name} ({icon} {kind})")
               print(f"  Reason: {formatted_reason}")
@@ -107,7 +111,7 @@ jobs:
         if: always()
         run: |
           python3 - <<'PY'
-          import glob, json, xml.etree.ElementTree as ET, os
+          import glob, json, xml.etree.ElementTree as ET, os, re
 
           files = glob.glob("target/surefire-reports/TEST-*.xml")
 
@@ -143,14 +147,25 @@ jobs:
 
               if failure is not None:
                 msg = (failure.attrib.get("message") or "").strip()
-                lines = msg.splitlines()
+                
+                # Replace "failures)" with "reasons)"
+                clean_msg = msg.replace("failures)", "reasons)")
+                # Remove class names for cleaner output
+                clean_msg = re.sub(r'org\.opentest4j\.AssertionFailedError: ', '', clean_msg)
+                
+                lines = clean_msg.splitlines()
                 short = "\n".join(lines[:6])
                 if len(lines) > 6: short += "\n..."
                 failed_items.append((name, "FAILED", short))
 
               if error is not None:
                 msg = (error.attrib.get("message") or "").strip()
-                lines = msg.splitlines()
+                
+                # Clean up error messages too
+                clean_msg = msg.replace("failures)", "reasons)")
+                clean_msg = re.sub(r'org\.opentest4j\.AssertionFailedError: ', '', clean_msg)
+                
+                lines = clean_msg.splitlines()
                 short = "\n".join(lines[:6])
                 if len(lines) > 6: short += "\n..."
                 failed_items.append((name, "ERROR", short))
@@ -167,7 +182,6 @@ jobs:
             lines.append("*Failed test(s) and why:*")
             MAX_SHOW = 12
             for (name, kind, reason) in failed_items[:MAX_SHOW]:
-              # Format reason as code block or just text if multi-line
               lines.append(f"• *{name}*")
               lines.append(f"  {reason}") 
             if len(failed_items) > MAX_SHOW:
