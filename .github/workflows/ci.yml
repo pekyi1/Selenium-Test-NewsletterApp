@@ -83,9 +83,15 @@ jobs:
           else:
             for (name, kind, msg) in failed_tests:
               icon = "❌" if kind == "FAIL" else "⚠️"
-              short = msg.splitlines()[0] if msg else "No message provided"
+              # Capture up to 6 lines for better context on Soft Assertions
+              lines = msg.splitlines()
+              short = "\n".join(lines[:6])
+              if len(lines) > 6: short += "\n  ..."
+              
+              # Indent the reason nicely
+              formatted_reason = short.replace("\n", "\n  ")
               print(f"- {name} ({icon} {kind})")
-              print(f"  Reason: {short}")
+              print(f"  Reason: {formatted_reason}")
 
           print("==================================")
 
@@ -137,12 +143,16 @@ jobs:
 
               if failure is not None:
                 msg = (failure.attrib.get("message") or "").strip()
-                short = msg.splitlines()[0] if msg else "The app did not behave as expected."
+                lines = msg.splitlines()
+                short = "\n".join(lines[:6])
+                if len(lines) > 6: short += "\n..."
                 failed_items.append((name, "FAILED", short))
 
               if error is not None:
                 msg = (error.attrib.get("message") or "").strip()
-                short = msg.splitlines()[0] if msg else "The test could not complete."
+                lines = msg.splitlines()
+                short = "\n".join(lines[:6])
+                if len(lines) > 6: short += "\n..."
                 failed_items.append((name, "ERROR", short))
 
           passed = total - failed - errors - skipped
@@ -157,7 +167,9 @@ jobs:
             lines.append("*Failed test(s) and why:*")
             MAX_SHOW = 12
             for (name, kind, reason) in failed_items[:MAX_SHOW]:
-              lines.append(f"• *{name}* — {reason}")
+              # Format reason as code block or just text if multi-line
+              lines.append(f"• *{name}*")
+              lines.append(f"  {reason}") 
             if len(failed_items) > MAX_SHOW:
               lines.append(f"• …and {len(failed_items) - MAX_SHOW} more failed/error tests (see run for full list)")
           else:
@@ -177,7 +189,7 @@ jobs:
               f"Total: {total} | Passed: {passed} | Failed: {failed} | Errors: {errors} | Skipped: {skipped}",
               "",
               "Failed test(s) and why:" if failed_items else "Failed test(s) and why: None",
-              *([f"- {name}: {reason}" for (name, _, reason) in failed_items[:12]] if failed_items else []),
+              *([f"- {name}:\n{reason}" for (name, _, reason) in failed_items[:12]] if failed_items else []),
               "",
               f"Repo: {repo} | Branch: {branch}",
               f"Run details: {run_url}"
