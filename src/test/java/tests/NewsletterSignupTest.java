@@ -10,7 +10,8 @@ public class NewsletterSignupTest extends BaseTest {
     @BeforeEach
     void getUrl() {
         url = System.getProperty("baseUrl",
-                System.getenv().getOrDefault("APP_BASE_URL", "https://newsletter-sign-up-form-rust-eight.vercel.app/index.html"));
+                System.getenv().getOrDefault("APP_BASE_URL",
+                        "https://newsletter-sign-up-form-rust-eight.vercel.app/index.html"));
         Assertions.assertNotNull(url);
     }
 
@@ -18,8 +19,8 @@ public class NewsletterSignupTest extends BaseTest {
     void validEmail_showsSuccessCard_andDisplaysTrimmedEmail() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("  fred.pekyi@example.com  ")
-                .submit();
+                .enterEmail("  fred.pekyi@example.com  ")
+                .clickSubscribeButton();
 
         Assertions.assertTrue(page.isSuccessCardShown(), "Success card should be shown for valid email.");
         Assertions.assertFalse(page.isSignupCardShown(), "Signup card should be hidden after success.");
@@ -31,8 +32,8 @@ public class NewsletterSignupTest extends BaseTest {
     void emptyEmail_showsError_andEmailInputGetsErrorClass() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("")
-                .submit();
+                .enterEmail("")
+                .clickSubscribeButton();
 
         Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for empty email.");
         Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
@@ -44,8 +45,8 @@ public class NewsletterSignupTest extends BaseTest {
     void invalidEmailFormat_showsError() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("fred.pekyi.example.com") // missing @
-                .submit();
+                .enterEmail("fred.pekyi.example.com") // missing @
+                .clickSubscribeButton();
 
         Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for invalid email.");
         Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
@@ -55,8 +56,8 @@ public class NewsletterSignupTest extends BaseTest {
     void emailWithoutDotDomain_showsError() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("fred@company") // no .tld
-                .submit();
+                .enterEmail("fred@company") // no .tld
+                .clickSubscribeButton();
 
         Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for missing TLD.");
         Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
@@ -66,8 +67,8 @@ public class NewsletterSignupTest extends BaseTest {
     void errorClearsWhenUserTypesAfterInvalidSubmit() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("bademail")
-                .submit();
+                .enterEmail("bademail")
+                .clickSubscribeButton();
 
         Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error should be visible after invalid submit.");
         Assertions.assertTrue(page.isEmailInputInErrorState(), "Input should be in error state.");
@@ -83,11 +84,11 @@ public class NewsletterSignupTest extends BaseTest {
     void dismissResetsToSignup_andClearsErrorState() {
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)
-                .setEmail("fred.pekyi@example.com") //intentionally failed to test logs
-                .submit();
+                .enterEmail("fred.pekyi@example.com")
+                .clickSubscribeButton();
 
         Assertions.assertTrue(page.isSuccessCardShown(), "Success should be visible before dismiss.");
-        page.dismiss();
+        page.clickDismissButton();
 
         Assertions.assertTrue(page.isSignupCardShown(), "Signup should be visible after dismiss.");
         Assertions.assertFalse(page.isSuccessCardShown(), "Success should be hidden after dismiss.");
