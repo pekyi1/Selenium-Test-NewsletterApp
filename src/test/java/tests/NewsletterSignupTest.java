@@ -1,9 +1,11 @@
 package tests;
 
+import base.BaseTest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import pages.NewsletterPage;
+import utils.JsonDataUtils;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class NewsletterSignupTest extends BaseTest {
@@ -91,7 +93,7 @@ public class NewsletterSignupTest extends BaseTest {
     @Order(4)
     @Test
     void dismissResetsToSignup_andClearsErrorState() {
-        //use a valid email from our data
+        // use a valid email from our data
         String validStub = utils.JsonDataUtils.getSingleValidEmail();
         NewsletterPage page = new NewsletterPage(driver)
                 .open(url)

@@ -24,7 +24,7 @@ jobs:
           echo "Testing URL: ${{ secrets.APP_BASE_URL }}"
 
       - name: Run Selenium tests (headless)
-        run: mvn -B -e test -Dheadless=true -DbaseUrl=${{ secrets.APP_BASE_URL }} -DtrimStackTrace=false
+        run: mvn -B -e test -Dheadless=true -DbaseUrl=${{ secrets.APP_BASE_URL }} -DtrimStackTrace=false #runs maven test in CI
 
       # Human-friendly summary in GitHub Actions logs (non-technical)
       # NOTE: This step will show ❌ if there are failures/errors (by exiting 1),

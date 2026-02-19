@@ -1,9 +1,9 @@
-package tests;
+package base;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.WebDriver;
-import utils.DriverFactory;
+import driver.DriverFactory;
 
 public abstract class BaseTest {
 
