@@ -15,7 +15,7 @@ public class NewsletterPage {
     @FindBy(id = "email")
     private WebElement emailInput;
 
-    @FindBy(id = "subscribe")
+    @FindBy(id = "Subscribe")
     private WebElement subscribeButton;
 
     @FindBy(id = "email-error")
