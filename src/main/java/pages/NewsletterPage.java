@@ -15,7 +15,7 @@ public class NewsletterPage {
     @FindBy(id = "email")
     private WebElement emailInput;
 
-    @FindBy(css = "button[type='submit'].btn")
+    @FindBy(id = "Subscribe")
     private WebElement subscribeButton;
 
     @FindBy(id = "email-error")
