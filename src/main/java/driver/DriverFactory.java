@@ -10,7 +10,7 @@ import java.time.Duration;
 public class DriverFactory {
 
     public static WebDriver createDriver() {
-        WebDriverManager.chromedriver().setup();
+       // WebDriverManager.chromedriver().setup();
 
         boolean headless = Boolean.parseBoolean(
                 System.getProperty("headless", "false")
@@ -18,11 +18,11 @@ public class DriverFactory {
 
         ChromeOptions options = new ChromeOptions();
 
-        if (headless) {
-            // Headless requires explicit window size
-            options.addArguments("--headless=new");
-            options.addArguments("--window-size=1920,1080");
-        }
+//        if (headless) {
+//            // Headless requires explicit window size
+//            options.addArguments("--headless=new");
+//            options.addArguments("--window-size=1920,1080");
+//        }
 
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");

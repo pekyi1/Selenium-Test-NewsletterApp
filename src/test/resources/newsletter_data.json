@@ -1,6 +1,7 @@
 {
     "validEmails": [
-        "fred.pekyi@example.com"
+        "fred.pekyi@example.com",
+        "franz@gmail.com"
     ],
     "invalidEmails": [
         "",

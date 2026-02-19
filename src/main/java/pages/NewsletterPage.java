@@ -39,11 +39,6 @@ public class NewsletterPage {
         PageFactory.initElements(driver, this);
     }
 
-    public NewsletterPage open(String url) {
-        driver.get(url); //opens a new browser with the url
-        return this;
-    }
-
     public NewsletterPage enterEmail(String email) {
         waitUtils.waitForVisibility(emailInput).clear();
         emailInput.sendKeys(email);
