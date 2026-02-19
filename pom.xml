@@ -30,7 +30,6 @@
             <groupId>io.github.bonigarcia</groupId>
             <artifactId>webdrivermanager</artifactId>
             <version>${wdm.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -38,6 +37,20 @@
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>1.10.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JSON Data Processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.16.1</version>
         </dependency>
     </dependencies>
 
@@ -51,7 +64,7 @@
                     <useModulePath>false</useModulePath>
                     <systemPropertyVariables>
                         <headless>false</headless>
-                        <baseUrl>http://localhost:5500</baseUrl>
+                        <baseUrl>https://newsletter-sign-up-form-rust-eight.vercel.app/index.html</baseUrl>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

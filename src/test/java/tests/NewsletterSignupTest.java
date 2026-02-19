@@ -1,98 +1,106 @@
 package tests;
 
+import base.BaseTest;
 import org.junit.jupiter.api.*;
-import pages.NewsletterPage;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class NewsletterSignupTest extends BaseTest {
 
-    private String url;
+        @Tag("smoke")
+        @Tag("regression")
+        @Order(1)
+        @ParameterizedTest(name = "Valid Email: {0}")
+        @MethodSource("utils.JsonDataUtils#getValidEmails")
+        void validEmail_showsSuccessCard_andDisplaysTrimmedEmail(String validEmail) {
+                newsletterPage
+                                .enterEmail(validEmail)
+                                .clickSubscribeButton();
 
-    @BeforeEach
-    void getUrl() {
-        url = System.getProperty("baseUrl");
-        Assertions.assertNotNull(url, "Set -DbaseUrl=<hosted url> in IntelliJ/CI.");
-    }
+                Assertions.assertAll("Valid Email Success",
+                                () -> Assertions.assertTrue(newsletterPage.isSuccessCardShown(),
+                                                "Success card should be shown for valid email."),
+                                () -> Assertions.assertFalse(newsletterPage.isSignupCardShown(),
+                                                "Signup card should be hidden after success."),
+                                () -> Assertions.assertEquals(validEmail.trim(), newsletterPage.getShownUserEmail(),
+                                                "Displayed email should match trimmed input."));
+        }
 
-    @Test
-    void validEmail_showsSuccessCard_andDisplaysTrimmedEmail() {
-        NewsletterPage page = new NewsletterPage(driver)
-                .open(url)
-                .setEmail("  fred.pekyi@example.com  ")
-                .submit();
+        @Tag("regression")
+        @Order(2)
+        @ParameterizedTest(name = "Invalid Email (JSON): {0}")
+        @MethodSource("utils.JsonDataUtils#getInvalidEmails")
+        void invalidEmails_showError_andInputGetsErrorClass(String invalidEmail) {
 
-        Assertions.assertTrue(page.isSuccessCardShown(), "Success card should be shown for valid email.");
-        Assertions.assertFalse(page.isSignupCardShown(), "Signup card should be hidden after success.");
-        Assertions.assertEquals("fred.pekyi@example.com", page.getShownUserEmail(),
-                "Displayed email should match trimmed input.");
-    }
+                newsletterPage.enterEmail(invalidEmail)
+                                .clickSubscribeButton();
 
-    @Test
-    void emptyEmail_showsError_andEmailInputGetsErrorClass() {
-        NewsletterPage page = new NewsletterPage(driver)
-                .open(url)
-                .setEmail("")
-                .submit();
+                Assertions.assertAll("Invalid Email Error Checks",
+                                () -> Assertions.assertTrue(newsletterPage.isEmailErrorDisplayed(),
+                                                "Error message should display for invalid email: " + invalidEmail),
+                                () -> Assertions.assertTrue(newsletterPage.isEmailInputInErrorState(),
+                                                "Email input should have 'error' class for: " + invalidEmail));
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for empty email.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
-        Assertions.assertTrue(page.isSignupCardShown(), "Signup card should remain visible on error.");
-        Assertions.assertFalse(page.isSuccessCardShown(), "Success card should remain hidden on error.");
-    }
+                if (invalidEmail.isEmpty()) {
+                        // Specific assertion for empty email case if needed
+                        Assertions.assertAll("Empty Email Specific Checks",
+                                        () -> Assertions.assertTrue(newsletterPage.isSignupCardShown(),
+                                                        "Signup card should remain visible."),
+                                        () -> Assertions.assertFalse(newsletterPage.isSuccessCardShown(),
+                                                        "Success card should remain hidden."));
+                }
+        }
 
-    @Test
-    void invalidEmailFormat_showsError() {
-        NewsletterPage page = new NewsletterPage(driver)
-                .open(url)
-                .setEmail("fred.pekyi.example.com") // missing @
-                .submit();
+        @Tag("regression")
+        @Order(3)
+        @Test
+        void errorClearsWhenUserTypesAfterInvalidSubmit() {
+                // Use a known invalid email from our data
+                String badEmail = utils.JsonDataUtils.getSingleInvalidEmail();
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for invalid email.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
-    }
+                newsletterPage
+                                .enterEmail(badEmail)
+                                .clickSubscribeButton();
 
-    @Test
-    void emailWithoutDotDomain_showsError() {
-        NewsletterPage page = new NewsletterPage(driver)
-                .open(url)
-                .setEmail("fred@company") // no .tld
-                .submit();
+                Assertions.assertAll("Error Visible Before Typing",
+                                () -> Assertions.assertTrue(newsletterPage.isEmailErrorDisplayed(),
+                                                "Error should be visible after invalid submit."),
+                                () -> Assertions.assertTrue(newsletterPage.isEmailInputInErrorState(),
+                                                "Input should be in error state."));
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error message should display for missing TLD.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Email input should have 'error' class.");
-    }
+                // Your JS hides error on any input event when error class is present
+                newsletterPage.typeEmail("a");
 
-    @Test
-    void errorClearsWhenUserTypesAfterInvalidSubmit() {
-        NewsletterPage page = new NewsletterPage(driver)
-                .open(url)
-                .setEmail("bademail")
-                .submit();
+                Assertions.assertAll("Error Hidden After Typing",
+                                () -> Assertions.assertFalse(newsletterPage.isEmailErrorDisplayed(),
+                                                "Error should hide when user starts typing."),
+                                () -> Assertions.assertFalse(newsletterPage.isEmailInputInErrorState(),
+                                                "Error class should be removed on input."));
+        }
 
-        Assertions.assertTrue(page.isEmailErrorDisplayed(), "Error should be visible after invalid submit.");
-        Assertions.assertTrue(page.isEmailInputInErrorState(), "Input should be in error state.");
+        @Tag("regression")
+        @Order(4)
+        @Test
+        void dismissResetsToSignup_andClearsErrorState() {
+                // use a valid email from our data
+                String validStub = utils.JsonDataUtils.getSingleValidEmail();
 
-        // Your JS hides error on any input event when error class is present
-        page.typeEmail("a");
+                newsletterPage
+                                .enterEmail(validStub)
+                                .clickSubscribeButton();
 
-        Assertions.assertFalse(page.isEmailErrorDisplayed(), "Error should hide when user starts typing.");
-        Assertions.assertFalse(page.isEmailInputInErrorState(), "Error class should be removed on input.");
-    }
+                Assertions.assertTrue(newsletterPage.isSuccessCardShown(), "Success should be visible before dismiss.");
+                newsletterPage.clickDismissButton();
 
-    @Test
-    void dismissResetsToSignup_andClearsErrorState() {
-        NewsletterPage page = new NewsletterPage(driver)
-                .open(url)
-                .setEmail("fred.pekyi@example") //intentionally failed to test logs
-                .submit();
-
-        Assertions.assertTrue(page.isSuccessCardShown(), "Success should be visible before dismiss.");
-        page.dismiss();
-
-        Assertions.assertTrue(page.isSignupCardShown(), "Signup should be visible after dismiss.");
-        Assertions.assertFalse(page.isSuccessCardShown(), "Success should be hidden after dismiss.");
-
-        // After dismiss, error must be hidden and input not in error state
-        Assertions.assertFalse(page.isEmailErrorDisplayed(), "Error should be hidden after dismiss/reset.");
-        Assertions.assertFalse(page.isEmailInputInErrorState(), "Input should not have error class after dismiss.");
-    }
+                Assertions.assertAll("Dismiss State Reset",
+                                () -> Assertions.assertTrue(newsletterPage.isSignupCardShown(),
+                                                "Signup should be visible after dismiss."),
+                                () -> Assertions.assertFalse(newsletterPage.isSuccessCardShown(),
+                                                "Success should be hidden after dismiss."),
+                                () -> Assertions.assertFalse(newsletterPage.isEmailErrorDisplayed(),
+                                                "Error should be hidden after dismiss/reset."),
+                                () -> Assertions.assertFalse(newsletterPage.isEmailInputInErrorState(),
+                                                "Input should not have error class after dismiss."));
+        }
 }

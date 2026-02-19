@@ -1,15 +1,16 @@
 package pages;
 
-import org.openqa.selenium.*;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
-import org.openqa.selenium.support.ui.*;
+import utils.WaitUtils;
 
 import java.time.Duration;
 
 public class NewsletterPage {
     private final WebDriver driver;
-    private final WebDriverWait wait;
+    private final WaitUtils waitUtils;
 
     @FindBy(id = "email")
     private WebElement emailInput;
@@ -34,41 +35,36 @@ public class NewsletterPage {
 
     public NewsletterPage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        this.waitUtils = new WaitUtils(driver, Duration.ofSeconds(10));
         PageFactory.initElements(driver, this);
     }
 
-    public NewsletterPage open(String url) {
-        driver.get(url);
-        return this;
-    }
-
-    public NewsletterPage setEmail(String email) {
-        wait.until(ExpectedConditions.visibilityOf(emailInput)).clear();
+    public NewsletterPage enterEmail(String email) {
+        waitUtils.waitForVisibility(emailInput).clear();
         emailInput.sendKeys(email);
         return this;
     }
 
-    public NewsletterPage submit() {
-        wait.until(ExpectedConditions.elementToBeClickable(subscribeButton)).click();
+    public NewsletterPage clickSubscribeButton() {
+        waitUtils.safeClick(subscribeButton);
         return this;
     }
 
     public NewsletterPage typeEmail(String text) {
         // for “error clears on input” test
-        wait.until(ExpectedConditions.visibilityOf(emailInput)).sendKeys(text);
+        waitUtils.waitForVisibility(emailInput).sendKeys(text);
         return this;
     }
 
-    public NewsletterPage dismiss() {
-        wait.until(ExpectedConditions.elementToBeClickable(dismissButton)).click();
+    public NewsletterPage clickDismissButton() {
+        waitUtils.safeClick(dismissButton);
         return this;
     }
 
     // ---------- Assertions helpers ----------
     public boolean isEmailErrorDisplayed() {
         // error is controlled via style.display, so visibilityOf works
-        return waitVisible(emailError, Duration.ofSeconds(3));
+        return waitUtils.isElementVisible(emailError, Duration.ofSeconds(3));
     }
 
     public boolean isEmailInputInErrorState() {
@@ -84,15 +80,6 @@ public class NewsletterPage {
     }
 
     public String getShownUserEmail() {
-        return wait.until(ExpectedConditions.visibilityOf(userEmailSpan)).getText();
-    }
-
-    private boolean waitVisible(WebElement el, Duration timeout) {
-        try {
-            new WebDriverWait(driver, timeout).until(ExpectedConditions.visibilityOf(el));
-            return el.isDisplayed();
-        } catch (TimeoutException e) {
-            return false;
-        }
+        return waitUtils.waitForVisibility(userEmailSpan).getText();
     }
 }
