@@ -18,11 +18,11 @@ public class DriverFactory {
 
         ChromeOptions options = new ChromeOptions();
 
-//        if (headless) {
-//            // Headless requires explicit window size
-//            options.addArguments("--headless=new");
-//            options.addArguments("--window-size=1920,1080");
-//        }
+        if (headless) {
+            // Headless requires explicit window size
+            options.addArguments("--headless=new");
+            options.addArguments("--window-size=1920,1080");
+        }
 
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
